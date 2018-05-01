@@ -2,6 +2,10 @@ package modelo;
 
 import java.io.File;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
@@ -158,29 +162,141 @@ public class modelo extends database{
         }
     }
     
-    public void consClientsAll(){
+    public void consClientsAll(JTable tablota){
         String q = "SELECT * FROM CLIENTE";
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("ID");
+        modelo.addColumn("NOMBRE");
+        modelo.addColumn("DIRECCIÓN");
+        tablota.setModel(modelo);
+        String[] datos = new String[3];
         try{
-            PreparedStatement pstm = this.getConexion().prepareStatement(q);
-            pstm.execute();
-            pstm.close();
+            Statement st = this.getConexion().createStatement();
+            ResultSet rs = st.executeQuery(q);
+            while(rs.next()){
+                datos[0] = rs.getString(1);
+                datos[1] = rs.getString(2);
+                datos[2] = rs.getString(3);
+                modelo.addRow(datos);
+            }
         }catch(Exception e){}
     }
-    public void conFactsAll(){
+    public void conFactsAll(JTable tablota){
         String q = "SELECT * FROM FACTURA";
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("ID");
+        modelo.addColumn("CLIENTES");
+        tablota.setModel(modelo);
+        String[] datos = new String[2];
         try{
-            PreparedStatement pstm = this.getConexion().prepareStatement(q);
-            pstm.execute();
-            pstm.close();
+            Statement st = this.getConexion().createStatement();
+            ResultSet rs = st.executeQuery(q);
+            while(rs.next()){
+                datos[0] = rs.getString(1);
+                datos[1] = rs.getString(2);
+                modelo.addRow(datos);
+            }
         }catch(Exception e){}
     }
-    public void clientsAndVehiclesAll(){
-        String q = "SELECT * FROM CLIENTE";
+    public void conClientCarCost(JTable tablota){
+        String q = "SELECT NOMBRE, V.PLACAS, V.MODELO, F.MONTO FROM CLIENTE C JOIN POLIZA ON C.IDCLIENTE = POLIZA.IDCLIENTE JOIN VEHICULO V ON POLIZA.VEHICULOID = V.VEHICULOID JOIN FACTURA F ON V.FACTURAID = F.FACTURAID;";
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("NOMBRE");
+        modelo.addColumn("PLACAS");
+        modelo.addColumn("MODELO");
+        modelo.addColumn("MONTO");
+        tablota.setModel(modelo);
+        String[] datos = new String[4];
         try{
-                PreparedStatement pstm = this.getConexion().prepareStatement(q);
-                pstm.execute();
-                pstm.close();
+            Statement st = this.getConexion().createStatement();
+            ResultSet rs = st.executeQuery(q);
+            while(rs.next()){
+                datos[0] = rs.getString(1);
+                datos[1] = rs.getString(2);
+                datos[2] = rs.getString(3);
+                datos[3] = rs.getString(4);
+                modelo.addRow(datos);
+            }
         }catch(Exception e){}
+    }
+    public void conClientCar(JTable tablota, int idcliente){
+        int i = 0;
+        String q = "SELECT C.NOMBRE, C.DIRECCION, V.PLACAS FROM CLIENTE C JOIN CLIENTE C JOIN POLIZA P ON C.IDCLIENTE = P.IDCLIENTE JOIN VEHICULO V ON P.VEHICULOID = V.VEHICULOID WHERE C.IDCLIENTE = " + idcliente + ";";
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("NOMBRE");
+        modelo.addColumn("DIRECCION");
+        modelo.addColumn("PLACAS");
+        tablota.setModel(modelo);
+        String[] datos = new String[3];
+        try{
+            Statement st = this.getConexion().createStatement();
+            ResultSet rs = st.executeQuery(q);
+            while(rs.next()){
+                datos[0] = rs.getString(1);
+                datos[1] = rs.getString(2);
+                datos[2] = rs.getString(3);
+                modelo.addRow(datos);
+            }
+        }catch(Exception e){}
+    }
+    public void conClientPol(JTable tablota, int idcliente){
+        String q = "SELECT C.NOMBRE, V.PLACAS, P.COSTO, P.PRIMA FROM cliente C JOIN POLIZA P ON C.IDCLIENTE = P.IDCLIENTE JOIN VEHICULO V ON P.VEHICULOID = V.VEHICULOID WHERE C.IDCLIENTE = " + idcliente + ";";
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("NOMBRE");
+        modelo.addColumn("PLACAS");
+        modelo.addColumn("COSTP");
+        modelo.addColumn("PRIMA");
+        tablota.setModel(modelo);
+        String[] datos = new String[4];
+        try{
+            Statement st = this.getConexion().createStatement();
+            ResultSet rs = st.executeQuery(q);
+            while(rs.next()){
+                datos[0] = rs.getString(1);
+                datos[1] = rs.getString(2);
+                datos[2] = rs.getString(3);
+                datos[3] = rs.getString(4);
+                modelo.addRow(datos);
+            }
+        }catch(Exception e){}
+    }
+    public void conFechasPol(JTable tablota){
+        String q = "SELECT P.FECHA_AP, P.FECHA_VEN FROM POLIZA P;";
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("FECHA APERTURA");
+        modelo.addColumn("FECHA VENCIMIENTO");
+        tablota.setModel(modelo);
+        String[] datos = new String[2];
+        try{
+            Statement st = this.getConexion().createStatement();
+            ResultSet rs = st.executeQuery(q);
+            while(rs.next()){
+                datos[0] = rs.getString(1);
+                datos[1] = rs.getString(2);
+                modelo.addRow(datos);
+            }
+        }catch(Exception e){}   
+    }
+    public void elMacho(JTable tablota){
+        String q = "SELECT C.NOMBRE, V.PLACAS, F.MONTO, P.COSTO FROM CLIENTE C JOIN POLOZA P ON C.IDCLIENTE = P.IDCLIENTE JOIN VEHICULO V ON P.VEHICULOID = V.VEHICULOID JOIN FACTURA F ON V.FACTURAID = F.FACTURAID WHERE P.COSTO = (SELECT MAX(COSTO) FROM poliza);";
+        DefaultTableModel modelo = new DefaultTableModel();
+        modelo.addColumn("NOMBRE");
+        modelo.addColumn("PLACAS");
+        modelo.addColumn("MONTO");
+        modelo.addColumn("COSTO");
+        tablota.setModel(modelo);
+        String[] datos = new String[4];
+        try{
+            Statement st = this.getConexion().createStatement();
+            ResultSet rs = st.executeQuery(q);
+            while(rs.next()){
+                datos[0] = rs.getString(1);
+                datos[1] = rs.getString(2);
+                datos[2] = rs.getString(3);
+                datos[3] = rs.getString(4);
+                modelo.addRow(datos);
+            }
+        }catch(Exception e){}        
     }
 }
 
